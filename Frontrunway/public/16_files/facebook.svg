@@ -1,0 +1,22 @@
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    height="35"
+    width="35"
+    viewBox="0 0 35 35"
+  >
+    <rect
+      id="Rectangle_2370"
+      data-name="Rectangle 2370"
+      width="35"
+      height="35"
+      rx="17.5"
+      fill="#ffffff"
+    />
+    <path
+      id="facebook"
+      d="M12.318,2.491h1.369V.106A17.683,17.683,0,0,0,11.693,0C9.718,0,8.366,1.242,8.366,3.524v2.1H6.187V8.291H8.366V15h2.671V8.292h2.091l.332-2.666H11.036V3.789c0-.771.208-1.3,1.282-1.3Z"
+      transform="translate(7.563 10)"
+      fill="#109d48"
+    />
+  </svg>
+
