@@ -5,35 +5,42 @@ import UseCrud from '../../hook/UseCrud';
 import { FaMotorcycle } from 'react-icons/fa';
 import { API_URL } from '../config';
 
+import ReactDatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
 const Domiciliarios = () => {
   const { auth } = useAuth();
-  // Endpoint donde se recibe el POST con archivos
   const BASEURL = `${API_URL}/domiciliarios/postDomiciliario`;
   const BASEURL_USUARIOS = `${API_URL}/users/getUserTipeUser/domiciliario`;
 
-  // Usamos el hook para consumir la API
-  // --- OJO: AQUÍ usaremos postApiFormData para la subida de archivos ---
-  const { 
-    postApiFormData,  // <-- Nuevo método para multipart/form-data
-    loading, 
-    error 
-  } = UseCrud(BASEURL);
-
+  const { postApiFormData, loading, error } = UseCrud(BASEURL);
   const { getApi: getUsuarios, response: usuariosResponse } = UseCrud(BASEURL_USUARIOS);
 
+  // Estado del formulario
   const [formData, setFormData] = useState({
     id_usuario: '',
     licencia_vehiculo: '',
     fecha_ingreso: '',
     fecha_salida: '',
-    estado: 'activo', // valor por defecto
+    estado: 'activo',
   });
 
-  // Estados locales para almacenar los archivos
+  // Estados para manejo de archivos
   const [soatFile, setSoatFile] = useState(null);
   const [imagenFile, setImagenFile] = useState(null);
 
+  // Estados para las fechas seleccionadas
+  const [fechaIngreso, setFechaIngreso] = useState(new Date());
+  const [fechaSalida, setFechaSalida] = useState(null);
+
+  // Estados para controlar la apertura de cada DatePicker
+  const [openIngreso, setOpenIngreso] = useState(false);
+  const [openSalida, setOpenSalida] = useState(false);
+
+  // Mensajes de retroalimentación
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Usuarios con rol domiciliario
   const [usuarios, setUsuarios] = useState([]);
 
   useEffect(() => {
@@ -49,7 +56,32 @@ const Domiciliarios = () => {
     }
   }, [usuariosResponse]);
 
-  // Manejador de cambios en inputs de texto / select
+  // Sincronizar fechaIngreso (Date) con formData.fecha_ingreso (string ISO)
+  useEffect(() => {
+    if (fechaIngreso) {
+      setFormData((prev) => ({
+        ...prev,
+        fecha_ingreso: fechaIngreso.toISOString(),
+      }));
+    }
+  }, [fechaIngreso]);
+
+  // Sincronizar fechaSalida (Date o null) con formData.fecha_salida (string ISO)
+  useEffect(() => {
+    if (fechaSalida) {
+      setFormData((prev) => ({
+        ...prev,
+        fecha_salida: fechaSalida.toISOString(),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        fecha_salida: '',
+      }));
+    }
+  }, [fechaSalida]);
+
+  // Manejar cambios de los inputs básicos
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -58,48 +90,37 @@ const Domiciliarios = () => {
     }));
   };
 
-  // Manejador de cambios para el archivo soat
+  // Manejar subida de archivos
   const handleSoatChange = (e) => {
     setSoatFile(e.target.files[0] || null);
   };
-
-  // Manejador de cambios para el archivo imagen_vehiculo
   const handleImagenChange = (e) => {
     setImagenFile(e.target.files[0] || null);
   };
 
+  // Al enviar el formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // 1. Crear instancia de FormData
       const formDataToSend = new FormData();
-
-      // 2. Agregar campos de texto
       formDataToSend.append('id_usuario', formData.id_usuario);
       formDataToSend.append('licencia_vehiculo', formData.licencia_vehiculo);
       formDataToSend.append('fecha_ingreso', formData.fecha_ingreso);
       formDataToSend.append('fecha_salida', formData.fecha_salida);
       formDataToSend.append('estado', formData.estado);
 
-      // 3. Agregar los archivos (los name deben coincidir con tu configuración en multer.fields)
-      //    - 'soat' y 'imagen_vehiculo'
-      if (soatFile) {
-        formDataToSend.append('soat', soatFile);
-      }
-      if (imagenFile) {
-        formDataToSend.append('imagen_vehiculo', imagenFile);
-      }
+      if (soatFile) formDataToSend.append('soat', soatFile);
+      if (imagenFile) formDataToSend.append('imagen_vehiculo', imagenFile);
 
-      // 4. Llamar al método que envía multipart/form-data (en lugar de fetch)
       const data = await postApiFormData(formDataToSend);
 
-      // Si todo va bien, mostrar mensaje y limpiar formulario
-      setMessage({ 
-        type: 'success', 
-        text: data.message || 'Domiciliario registrado exitosamente' 
+      setMessage({
+        type: 'success',
+        text: data.message || 'Domiciliario registrado exitosamente',
       });
 
+      // Reseteamos estados
       setFormData({
         id_usuario: '',
         licencia_vehiculo: '',
@@ -109,12 +130,12 @@ const Domiciliarios = () => {
       });
       setSoatFile(null);
       setImagenFile(null);
-
+      setFechaIngreso(new Date());
+      setFechaSalida(null);
     } catch (err) {
-      // Manejar errores (ya sea del servidor o de la petición)
-      setMessage({ 
-        type: 'error', 
-        text: err.message || 'Error al registrar el domiciliario' 
+      setMessage({
+        type: 'error',
+        text: err.message || 'Error al registrar el domiciliario',
       });
     }
   };
@@ -147,7 +168,7 @@ const Domiciliarios = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Selección de usuario */}
+              {/* Seleccionar Usuario */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Seleccionar Usuario Domiciliario
@@ -170,7 +191,7 @@ const Domiciliarios = () => {
                 </select>
               </div>
 
-              {/* Licencia del vehiculo */}
+              {/* Licencia del vehículo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Número de Licencia
@@ -191,27 +212,44 @@ const Domiciliarios = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha y Hora de Ingreso
                 </label>
-                <input
-                  type="datetime-local"
-                  name="fecha_ingreso"
-                  value={formData.fecha_ingreso}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                <ReactDatePicker
+                  selected={fechaIngreso}
+                  onChange={(date) => {
+                    setFechaIngreso(date);
+                    setOpenIngreso(false); // Cerrar al seleccionar
+                  }}
+                  onFocus={() => setOpenIngreso(true)}  // Abrir al enfocar
+                  onClickOutside={() => setOpenIngreso(false)} // Cerrar al hacer clic fuera
+                  open={openIngreso} // Controlado por estado
+                  showTimeSelect
+                  dateFormat="Pp"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                             focus:ring-2 focus:ring-blue-500 
+                             focus:border-transparent transition-colors duration-200"
                   required
                 />
               </div>
 
-              {/* Fecha y hora de salida */}
+              {/* Fecha y hora de salida (opcional) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fecha y Hora de Salida
                 </label>
-                <input
-                  type="datetime-local"
-                  name="fecha_salida"
-                  value={formData.fecha_salida}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                <ReactDatePicker
+                  selected={fechaSalida}
+                  onChange={(date) => {
+                    setFechaSalida(date);
+                    setOpenSalida(false); 
+                  }}
+                  onFocus={() => setOpenSalida(true)}
+                  onClickOutside={() => setOpenSalida(false)}
+                  open={openSalida}
+                  showTimeSelect
+                  dateFormat="Pp"
+                  placeholderText="Seleccione fecha y hora (opcional)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                             focus:ring-2 focus:ring-blue-500 
+                             focus:border-transparent transition-colors duration-200"
                 />
               </div>
 
@@ -232,7 +270,7 @@ const Domiciliarios = () => {
                 </select>
               </div>
 
-              {/* Archivo soat */}
+              {/* Documento SOAT */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Documento SOAT
@@ -240,14 +278,15 @@ const Domiciliarios = () => {
                 <input
                   type="file"
                   name="soat"
-                  accept=".pdf,.png,.jpg,.jpeg" 
+                  accept=".pdf,.png,.jpg,.jpeg"
                   onChange={handleSoatChange}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+                  className="block w-full text-sm text-gray-900 border border-gray-300 
+                             rounded-lg cursor-pointer bg-gray-50"
                   required
                 />
               </div>
 
-              {/* Imagen del vehiculo */}
+              {/* Imagen del vehículo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Imagen del Vehículo
@@ -257,12 +296,13 @@ const Domiciliarios = () => {
                   name="imagen_vehiculo"
                   accept="image/*"
                   onChange={handleImagenChange}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+                  className="block w-full text-sm text-gray-900 border border-gray-300 
+                             rounded-lg cursor-pointer bg-gray-50"
                   required
                 />
               </div>
 
-              {/* Botón de submit */}
+              {/* Botón de Submit */}
               <div className="mt-8">
                 <button
                   type="submit"
@@ -304,7 +344,6 @@ const Domiciliarios = () => {
               </div>
             </form>
 
-            {/* Mostrar error genérico de Axios si lo deseas */}
             {error && (
               <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200">
                 Error: {error}
