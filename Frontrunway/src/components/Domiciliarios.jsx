@@ -148,7 +148,7 @@ const Domiciliarios = () => {
           <div className="bg-white rounded-xl shadow-md p-6 md:p-8">
             <div className="flex flex-col items-center mb-8">
               <div className="bg-blue-100 p-3 rounded-full mb-4">
-                <FaMotorcycle className="w-8 h-8 text-blue-600" />
+                <FaMotorcycle className="w-8 h-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 text-center">
                 Registro de Nuevo Domiciliario
@@ -310,7 +310,7 @@ const Domiciliarios = () => {
                   className={`w-full py-3 px-4 border border-transparent rounded-lg text-white font-medium transition-colors duration-200 ${
                     loading
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                      : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
                   }`}
                 >
                   {loading ? (

@@ -101,6 +101,7 @@ export const postDomiciliario = async (req, res) => {
       `INSERT INTO domiciliarios 
       (id_usuario, licencia_vehiculo, disponibilidad, soat, fecha_ingreso, fecha_salida, estado, imagen_vehiculo, descuento_ingreso, descuento_salida)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+
       [
         id_usuario,
         licencia_vehiculo,
